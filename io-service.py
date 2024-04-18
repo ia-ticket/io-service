@@ -3,7 +3,12 @@ import psycopg2
 
 
 app = Flask(__name__)
-conn = psycopg2.connect(dbname='ticketing_app_db', user='admin', password='admin', host='db', port='5432')
+conn = psycopg2.connect(
+    host='db-io',
+    database='ticketing_app_db',
+    user='admin',
+    password='admin'
+)
 
 @app.route('/ticket', methods=['POST'])
 def create_ticket():
