@@ -12,27 +12,6 @@ conn = psycopg2.connect(
 )
 
 
-@app.route('/ticket', methods=['POST'])
-def create_ticket():
-    data = request.json
-    show_id = data.get('show_id')
-    costumer_id = data.get('costumer_id')
-    place_number = data.get('place_number')
-    ticket_status = data.get('ticket_status')
-    price = data.get('price')
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO tickets (show_id, costumer_id, place_number, ticket_status, price) VALUES (%s, %s, %s, %s, %s) RETURNING ticket_id", 
-                   (show_id, costumer_id, place_number, ticket_status, price))
-    ticket_id = cursor.fetchone()[0]
-    
-    if ticket_status == 'available':
-        cursor.execute("UPDATE shows SET inventory = inventory + 1 WHERE show_id = %s", (show_id,))
-
-    conn.commit()
-    cursor.close()
-    return jsonify({'ticket_id': ticket_id})
-
-
 @app.route('/ticket', methods=['GET'])
 def get_ticket():
     data = request.json
@@ -69,11 +48,9 @@ def get_show():
     })
 
 
-import logging
 @app.route('/my-tickets', methods=['GET'])
 def get_my_tickets():
     costumer_email = request.json.get('email')
-    logging.info(costumer_email)
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM tickets WHERE costumer_email = %s", (costumer_email,))
     tickets = cursor.fetchall()
@@ -100,8 +77,12 @@ def update_ticket_costumer_email():
     ticket_id = data.get('ticket_id')
     costumer_email = data.get('email')
     cursor = conn.cursor()
-    cursor.execute("UPDATE tickets SET costumer_email = %s WHERE ticket_id = %s RETURNING ticket_id, show_id, costumer_email, place_number, ticket_status, price",
-                   (costumer_email, ticket_id))
+    if costumer_email is not None:
+        cursor.execute("UPDATE tickets SET costumer_email = %s WHERE ticket_id = %s RETURNING ticket_id, show_id, costumer_email, place_number, ticket_status, price",
+                       (costumer_email, ticket_id))
+    else:
+        cursor.execute("UPDATE tickets SET costumer_email = NULL WHERE ticket_id = %s RETURNING ticket_id, show_id, costumer_email, place_number, ticket_status, price",
+                       (ticket_id,))
     ticket = cursor.fetchone()
     conn.commit()
     cursor.close()
