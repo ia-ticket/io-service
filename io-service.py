@@ -1,3 +1,4 @@
+from venv import logger
 from flask import Flask, request, jsonify
 import psycopg2
 from datetime import datetime
@@ -17,7 +18,7 @@ def get_ticket():
     data = request.json
     ticket_id = data.get('ticket_id')
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM tickets WHERE ticket_id = %s", (ticket_id,))
+    cursor.execute("SELECT * FROM tickets WHERE tickets.ticket_id = %s", (ticket_id,))
     ticket = cursor.fetchone()
     cursor.close()
     return jsonify({
@@ -52,7 +53,7 @@ def get_show():
 def get_my_tickets():
     costumer_email = request.json.get('email')
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM tickets WHERE costumer_email = %s", (costumer_email,))
+    cursor.execute("SELECT * FROM tickets WHERE tickets.costumer_email = %s", (costumer_email,))
     tickets = cursor.fetchall()
     cursor.close()
 
@@ -78,10 +79,10 @@ def update_ticket_costumer_email():
     costumer_email = data.get('email')
     cursor = conn.cursor()
     if costumer_email is not None:
-        cursor.execute("UPDATE tickets SET costumer_email = %s WHERE ticket_id = %s RETURNING ticket_id, show_id, costumer_email, place_number, ticket_status, price",
+        cursor.execute("UPDATE tickets SET tickets.costumer_email = %s WHERE tickets.ticket_id = %s RETURNING ticket_id, show_id, costumer_email, place_number, ticket_status, price",
                        (costumer_email, ticket_id))
     else:
-        cursor.execute("UPDATE tickets SET costumer_email = NULL WHERE ticket_id = %s RETURNING ticket_id, show_id, costumer_email, place_number, ticket_status, price",
+        cursor.execute("UPDATE tickets SET tickets.costumer_email = NULL WHERE tickets.ticket_id = %s RETURNING ticket_id, show_id, costumer_email, place_number, ticket_status, price",
                        (ticket_id,))
     ticket = cursor.fetchone()
     conn.commit()
@@ -102,7 +103,7 @@ def update_ticket_status():
     ticket_id = data.get('ticket_id')
     ticket_status = data.get('ticket_status')
     cursor = conn.cursor()
-    cursor.execute("UPDATE tickets SET ticket_status = %s WHERE ticket_id = %s RETURNING ticket_id, show_id, costumer_email, place_number, ticket_status, price",
+    cursor.execute("UPDATE tickets SET tickets.ticket_status = %s WHERE tickets.ticket_id = %s RETURNING ticket_id, show_id, costumer_email, place_number, ticket_status, price",
                    (ticket_status, ticket_id))
     ticket = cursor.fetchone()
 
@@ -152,7 +153,7 @@ def get_tickets():
 def get_tickets_by_show():
     show_id = request.json.get('show_id')
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM tickets WHERE show_id = %s", (show_id,))
+    cursor.execute("SELECT * FROM tickets WHERE tickets.show_id = %s", (show_id,))
     tickets = cursor.fetchall()
     cursor.close()
 
